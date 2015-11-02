@@ -100,19 +100,19 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 	return EXIT_SUCCESS;
 }
 
-LPCWSTR ExplainAction( DWORD dwAction ) 
+LPCWSTR ExplainAction( DWORD dwAction )
 {
 	switch (dwAction)
 	{
 	case FILE_ACTION_ADDED            :
 		return L"Added";
-	case FILE_ACTION_REMOVED          :  
+	case FILE_ACTION_REMOVED          :
 		return L"Deleted";
-	case FILE_ACTION_MODIFIED         :  
+	case FILE_ACTION_MODIFIED         :
 		return L"Modified";
-	case FILE_ACTION_RENAMED_OLD_NAME :  
+	case FILE_ACTION_RENAMED_OLD_NAME :
 		return L"Renamed From";
-	case FILE_ACTION_RENAMED_NEW_NAME :  
+	case FILE_ACTION_RENAMED_NEW_NAME :
 		return L"Renamed To";
 	default:
 		return L"BAD DATA";
