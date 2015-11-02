@@ -102,7 +102,7 @@ void CReadChangesRequest::BeginRead()
 		&m_Buffer[0],                       // read results buffer
 		m_Buffer.size(),					// length of buffer
 		m_bChildren,                        // monitoring option
-		FILE_NOTIFY_CHANGE_LAST_WRITE|FILE_NOTIFY_CHANGE_CREATION|FILE_NOTIFY_CHANGE_FILE_NAME,        // filter conditions
+		m_dwFlags,			                // filter conditions
 		&dwBytes,                           // bytes returned
 		&m_Overlapped,                      // overlapped buffer
 		&NotificationCompletion);           // completion routine
