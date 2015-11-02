@@ -75,8 +75,8 @@ protected:
 			LPOVERLAPPED lpOverlapped);					// I/O information buffer
 
 	// Parameters from the caller for ReadDirectoryChangesW().
-	DWORD		m_dwFlags;
-	BOOL		m_bChildren;
+	DWORD		m_dwFilterFlags;
+	BOOL		m_bIncludeChildren;
 	CStringW	m_wstrDirectory;
 
 	// Result of calling CreateFile().
@@ -155,7 +155,7 @@ protected:
 		else
 			delete pBlock;
 	}
-	
+
 	void RequestTermination()
 	{
 		m_bTerminate = true;

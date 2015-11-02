@@ -43,8 +43,8 @@ namespace ReadDirectoryChangesPrivate
 CReadChangesRequest::CReadChangesRequest(CReadChangesServer* pServer, LPCTSTR sz, BOOL b, DWORD dw, DWORD size)
 {
 	m_pServer		= pServer;
-	m_dwFlags		= dw;
-	m_bChildren		= b;
+	m_dwFilterFlags		= dw;
+	m_bIncludeChildren	= b;
 	m_wstrDirectory	= sz;
 	m_hDirectory	= 0;
 
@@ -72,7 +72,7 @@ bool CReadChangesRequest::OpenDirectory()
 	if (m_hDirectory)
 		return true;
 
-	m_hDirectory = ::CreateFile(
+	m_hDirectory = ::CreateFileW(
 		m_wstrDirectory,					// pointer to the file name
 		FILE_LIST_DIRECTORY,                // access (read/write) mode
 		FILE_SHARE_READ						// share mode
@@ -100,9 +100,9 @@ void CReadChangesRequest::BeginRead()
 	BOOL success = ::ReadDirectoryChangesW(
 		m_hDirectory,						// handle to directory
 		&m_Buffer[0],                       // read results buffer
-		m_Buffer.size(),					// length of buffer
-		m_bChildren,                        // monitoring option
-		m_dwFlags,			                // filter conditions
+		m_Buffer.size(),                    // length of buffer
+		m_bIncludeChildren,                 // monitoring option
+		m_dwFilterFlags,                    // filter conditions
 		&dwBytes,                           // bytes returned
 		&m_Overlapped,                      // overlapped buffer
 		&NotificationCompletion);           // completion routine
@@ -143,7 +143,7 @@ VOID CALLBACK CReadChangesRequest::NotificationCompletion(
 
 void CReadChangesRequest::ProcessNotification()
 {
-	char* pBase = (char*)&m_BackupBuffer[0];
+	BYTE* pBase = m_BackupBuffer.data();
 
 	for (;;)
 	{
@@ -165,7 +165,7 @@ void CReadChangesRequest::ProcessNotification()
 			// Convert to the long filename form. Unfortunately, this
 			// does not work for deletions, so it's an imperfect fix.
 			wchar_t wbuf[MAX_PATH];
-			if (::GetLongPathName(wstrFilename, wbuf, _countof (wbuf)) > 0)
+			if (::GetLongPathNameW(wstrFilename, wbuf, _countof(wbuf)) > 0)
 				wstrFilename = wbuf;
 		}
 
