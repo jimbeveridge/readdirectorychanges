@@ -42,7 +42,7 @@ public:
 			nMaxCount,	// max count
 			NULL);		// anonymous
 	}
-	
+
 	~CThreadSafeQueue()
 	{
 		::CloseHandle(m_hSemaphore);
@@ -58,6 +58,7 @@ public:
 		if (!::ReleaseSemaphore(m_hSemaphore, 1, NULL))
 		{
 			// If the semaphore is full, then take back the entry.
+			lock.Lock();
 			pop_back();
 			if (GetLastError() == ERROR_TOO_MANY_POSTS)
 			{
