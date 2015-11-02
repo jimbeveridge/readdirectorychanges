@@ -1,17 +1,15 @@
 # ReadDirectoryChanges
 
-Date:		May 2010<br>
-Version:	1.1<br>
-Status:		Beta. This code has been tested, but not exhaustively.
+Status:		Release candidate. This code has been tested, but not exhaustively.
 
 This sample code goes with my blog entry titled, [Understanding ReadDirectoryChangesW](
 http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html)
 
-Please create a new issue to report issues with this code.
+Please create a new issue or pull request for issues with this code.
 
 This project is for Visual Studio 2010. It should build and work fine under
-Visual Studio 2005 or 2008, you'll just need new solution and project files.
-All project options were left at the default.
+Visual Studio 2005 through 2014, although you'll need new solution and
+project files for older versions. All project options were left at the default.
 
 ## Usage
 
