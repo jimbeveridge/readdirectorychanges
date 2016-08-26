@@ -8,7 +8,7 @@ http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html)
 Please create a new issue or pull request for issues with this code.
 
 This project is for Visual Studio 2010. It should build and work fine under
-Visual Studio 2005 through 2014, although you'll need new solution and
+Visual Studio 2005 through 2015, although you'll need new solution and
 project files for older versions. All project options were left at the default.
 
 ## Usage
