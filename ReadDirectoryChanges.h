@@ -38,7 +38,7 @@ using TDirectoryChangeNotification = std::pair<DWORD, std::wstring>;
 
 namespace ReadDirectoryChangesPrivate
 {
-	class CReadChangesServer;
+    class CReadChangesServer;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -97,54 +97,54 @@ namespace ReadDirectoryChangesPrivate
 class CReadDirectoryChanges
 {
 public:
-	CReadDirectoryChanges(int nMaxChanges=1000);
+    CReadDirectoryChanges(int nMaxChanges = 1000);
 
-	// This is a multithreaded object, so don't allow copies.
-	CReadDirectoryChanges(const CReadDirectoryChanges&) = delete;
-	CReadDirectoryChanges& operator=(const CReadDirectoryChanges&) = delete;
+    // This is a multithreaded object, so don't allow copies.
+    CReadDirectoryChanges(const CReadDirectoryChanges&) = delete;
+    CReadDirectoryChanges& operator=(const CReadDirectoryChanges&) = delete;
 
-	~CReadDirectoryChanges();
+    ~CReadDirectoryChanges();
 
-	void Init();
-	void Terminate();
+    void Init();
+    void Terminate();
 
-	/// <summary>
-	/// Add a new directory to be monitored.
-	/// </summary>
-	/// <param name="wszDirectory">Directory to monitor.</param>
-	/// <param name="bWatchSubtree">True to also monitor subdirectories.</param>
-	/// <param name="dwNotifyFilter">The types of file system events to monitor, such as FILE_NOTIFY_CHANGE_ATTRIBUTES.</param>
-	/// <param name="dwBufferSize">The size of the buffer used for overlapped I/O.</param>
-	/// <remarks>
-	/// <para>
-	/// This function will make an APC call to the worker thread to issue a new
-	/// ReadDirectoryChangesW call for the given directory with the given flags.
-	/// </para>
-	/// </remarks>
-	void AddDirectory( LPCTSTR wszDirectory, bool bWatchSubtree, DWORD dwNotifyFilter, DWORD dwBufferSize=16384 );
+    /// <summary>
+    /// Add a new directory to be monitored.
+    /// </summary>
+    /// <param name="wszDirectory">Directory to monitor.</param>
+    /// <param name="bWatchSubtree">True to also monitor subdirectories.</param>
+    /// <param name="dwNotifyFilter">The types of file system events to monitor, such as FILE_NOTIFY_CHANGE_ATTRIBUTES.</param>
+    /// <param name="dwBufferSize">The size of the buffer used for overlapped I/O.</param>
+    /// <remarks>
+    /// <para>
+    /// This function will make an APC call to the worker thread to issue a new
+    /// ReadDirectoryChangesW call for the given directory with the given flags.
+    /// </para>
+    /// </remarks>
+    void AddDirectory(LPCTSTR wszDirectory, bool bWatchSubtree, DWORD dwNotifyFilter, DWORD dwBufferSize = 16384);
 
-	/// <summary>
-	/// Return a handle for the Win32 Wait... functions that will be
-	/// signaled when there is a queue entry.
-	/// </summary>
-	HANDLE GetWaitHandle() { return m_Notifications.GetWaitHandle(); }
+    /// <summary>
+    /// Return a handle for the Win32 Wait... functions that will be
+    /// signaled when there is a queue entry.
+    /// </summary>
+    HANDLE GetWaitHandle() { return m_Notifications.GetWaitHandle(); }
 
-	bool Pop(DWORD& dwAction, std::wstring& wstrFilename);
+    bool Pop(DWORD& dwAction, std::wstring& wstrFilename);
 
-	// "Push" is for usage by ReadChangesRequest.  Not intended for external usage.
-	void Push(DWORD dwAction, std::wstring& wstrFilename);
+    // "Push" is for usage by ReadChangesRequest.  Not intended for external usage.
+    void Push(DWORD dwAction, std::wstring& wstrFilename);
 
-	// Check if the queue overflowed. If so, clear it and return true.
-	bool CheckOverflow();
+    // Check if the queue overflowed. If so, clear it and return true.
+    bool CheckOverflow();
 
 protected:
-	std::unique_ptr<ReadDirectoryChangesPrivate::CReadChangesServer> m_pServer;
+    std::unique_ptr<ReadDirectoryChangesPrivate::CReadChangesServer> m_pServer;
 
-	std::thread m_Thread;
+    std::thread m_Thread;
 
-	unsigned int m_dwThreadId{};
+    unsigned int m_dwThreadId{};
 
-	CThreadSafeQueue<TDirectoryChangeNotification> m_Notifications;
+    CThreadSafeQueue<TDirectoryChangeNotification> m_Notifications;
 
-	HANDLE GetThreadHandle();
+    HANDLE GetThreadHandle();
 };
