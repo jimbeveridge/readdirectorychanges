@@ -133,7 +133,7 @@ bool TryGetKeyboardInput( HANDLE hStdIn, bool &bTerminate, char* buf )
 			bTerminate = true;
 		else if (rec.Event.KeyEvent.wVirtualKeyCode > VK_HELP)
 		{
-			if (!gets(buf))	// End of file, usually Ctrl-Z
+			if (!gets_s(buf, MAX_PATH))	// End of file, usually Ctrl-Z
 				bTerminate = true;
 			else
 				return true;
