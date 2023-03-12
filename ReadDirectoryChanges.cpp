@@ -52,7 +52,7 @@ void CReadDirectoryChanges::Init()
     // Kick off the worker thread, which will be
     // managed by CReadChangesServer.
     //
-    m_Thread = std::thread(CReadChangesServer::ThreadStartProc, m_pServer.get());
+    m_Thread = std::thread([this]() { m_pServer->Run(); });
 }
 
 void CReadDirectoryChanges::Terminate()
