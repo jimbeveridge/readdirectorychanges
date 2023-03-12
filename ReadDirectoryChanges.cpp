@@ -36,66 +36,66 @@ using namespace ReadDirectoryChangesPrivate;
 // CReadDirectoryChanges
 
 CReadDirectoryChanges::CReadDirectoryChanges(int nMaxCount)
-	: m_Notifications(nMaxCount)
+    : m_Notifications(nMaxCount)
 {
-	m_pServer = std::make_unique<ReadDirectoryChangesPrivate::CReadChangesServer>(CReadChangesServer(this));
+    m_pServer = std::make_unique<ReadDirectoryChangesPrivate::CReadChangesServer>(CReadChangesServer(this));
 }
 
 CReadDirectoryChanges::~CReadDirectoryChanges()
 {
-	Terminate();
+    Terminate();
 }
 
 void CReadDirectoryChanges::Init()
 {
-	//
-	// Kick off the worker thread, which will be
-	// managed by CReadChangesServer.
-	//
-	m_Thread = std::thread(CReadChangesServer::ThreadStartProc, m_pServer.get());
+    //
+    // Kick off the worker thread, which will be
+    // managed by CReadChangesServer.
+    //
+    m_Thread = std::thread(CReadChangesServer::ThreadStartProc, m_pServer.get());
 }
 
 void CReadDirectoryChanges::Terminate()
 {
-	if (m_Thread.joinable())
-	{
-		::QueueUserAPC(CReadChangesServer::TerminateProc, GetThreadHandle(), (ULONG_PTR)m_pServer.get());
-		m_Thread.join();
-	}
+    if (m_Thread.joinable())
+    {
+        ::QueueUserAPC(CReadChangesServer::TerminateProc, GetThreadHandle(), (ULONG_PTR)m_pServer.get());
+        m_Thread.join();
+    }
 }
 
-void CReadDirectoryChanges::AddDirectory( LPCTSTR szDirectory, bool bWatchSubtree, DWORD dwNotifyFilter, DWORD dwBufferSize )
+void CReadDirectoryChanges::AddDirectory(LPCTSTR szDirectory, bool bWatchSubtree, DWORD dwNotifyFilter, DWORD dwBufferSize)
 {
-	if (!m_Thread.joinable())
-		Init();
+    if (!m_Thread.joinable())
+        Init();
 
-	CReadChangesRequest* pRequest = new CReadChangesRequest(m_pServer.get(), szDirectory, bWatchSubtree, dwNotifyFilter, dwBufferSize);
-	QueueUserAPC(CReadChangesServer::AddDirectoryProc, GetThreadHandle(), (ULONG_PTR)pRequest);
+    CReadChangesRequest* pRequest = new CReadChangesRequest(m_pServer.get(), szDirectory, bWatchSubtree, dwNotifyFilter, dwBufferSize);
+    QueueUserAPC(CReadChangesServer::AddDirectoryProc, GetThreadHandle(), (ULONG_PTR)pRequest);
 }
 
 void CReadDirectoryChanges::Push(DWORD dwAction, std::wstring& wstrFilename)
 {
-	m_Notifications.push( TDirectoryChangeNotification(dwAction, wstrFilename) );
+    m_Notifications.push(TDirectoryChangeNotification(dwAction, wstrFilename));
 }
 
 bool  CReadDirectoryChanges::Pop(DWORD& dwAction, std::wstring& wstrFilename)
 {
-	TDirectoryChangeNotification pair;
-	if (!m_Notifications.pop(pair))
-		return false;
+    TDirectoryChangeNotification pair;
+    if (!m_Notifications.pop(pair))
+        return false;
 
-	dwAction = pair.first;
-	wstrFilename = pair.second;
+    dwAction = pair.first;
+    wstrFilename = pair.second;
 
-	return true;
+    return true;
 }
 
 bool CReadDirectoryChanges::CheckOverflow()
 {
-	bool b = m_Notifications.overflow();
-	if (b)
-		m_Notifications.clear();
-	return b;
+    bool b = m_Notifications.overflow();
+    if (b)
+        m_Notifications.clear();
+    return b;
 }
 
 
