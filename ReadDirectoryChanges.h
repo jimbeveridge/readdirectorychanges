@@ -29,9 +29,12 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
+#include <thread>
 #include "ThreadSafeQueue.h"
 
-typedef pair<DWORD,CStringW> TDirectoryChangeNotification;
+using TDirectoryChangeNotification = std::pair<DWORD, std::wstring>;
 
 namespace ReadDirectoryChangesPrivate
 {
@@ -76,7 +79,7 @@ namespace ReadDirectoryChangesPrivate
 ///				// We've received a notification in the queue.
 ///				{
 ///					DWORD dwAction;
-///					CStringW wstrFilename;
+///					std::wstring wstrFilename;
 ///					changes.Pop(dwAction, wstrFilename);
 ///					wprintf(L"%s %s\n", ExplainAction(dwAction), wstrFilename);
 ///				}
@@ -95,6 +98,11 @@ class CReadDirectoryChanges
 {
 public:
 	CReadDirectoryChanges(int nMaxChanges=1000);
+
+	// This is a multithreaded object, so don't allow copies.
+	CReadDirectoryChanges(const CReadDirectoryChanges&) = delete;
+	CReadDirectoryChanges& operator=(const CReadDirectoryChanges&) = delete;
+
 	~CReadDirectoryChanges();
 
 	void Init();
@@ -113,7 +121,7 @@ public:
 	/// ReadDirectoryChangesW call for the given directory with the given flags.
 	/// </para>
 	/// </remarks>
-	void AddDirectory( LPCTSTR wszDirectory, BOOL bWatchSubtree, DWORD dwNotifyFilter, DWORD dwBufferSize=16384 );
+	void AddDirectory( LPCTSTR wszDirectory, bool bWatchSubtree, DWORD dwNotifyFilter, DWORD dwBufferSize=16384 );
 
 	/// <summary>
 	/// Return a handle for the Win32 Wait... functions that will be
@@ -121,22 +129,22 @@ public:
 	/// </summary>
 	HANDLE GetWaitHandle() { return m_Notifications.GetWaitHandle(); }
 
-	bool Pop(DWORD& dwAction, CStringW& wstrFilename);
+	bool Pop(DWORD& dwAction, std::wstring& wstrFilename);
 
 	// "Push" is for usage by ReadChangesRequest.  Not intended for external usage.
-	void Push(DWORD dwAction, CStringW& wstrFilename);
+	void Push(DWORD dwAction, std::wstring& wstrFilename);
 
 	// Check if the queue overflowed. If so, clear it and return true.
 	bool CheckOverflow();
 
-	unsigned int GetThreadId() { return m_dwThreadId; }
-
 protected:
-	ReadDirectoryChangesPrivate::CReadChangesServer* m_pServer;
+	std::unique_ptr<ReadDirectoryChangesPrivate::CReadChangesServer> m_pServer;
 
-	HANDLE m_hThread;
+	std::thread m_Thread;
 
-	unsigned int m_dwThreadId;
+	unsigned int m_dwThreadId{};
 
 	CThreadSafeQueue<TDirectoryChangeNotification> m_Notifications;
+
+	HANDLE GetThreadHandle();
 };

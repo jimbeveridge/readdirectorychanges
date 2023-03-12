@@ -40,16 +40,12 @@ namespace ReadDirectoryChangesPrivate
 ///////////////////////////////////////////////////////////////////////////
 // CReadChangesRequest
 
-CReadChangesRequest::CReadChangesRequest(CReadChangesServer* pServer, LPCTSTR sz, BOOL b, DWORD dw, DWORD size)
+CReadChangesRequest::CReadChangesRequest(CReadChangesServer* pServer, LPCTSTR sz, bool b, DWORD dw, DWORD size)
+  : m_pServer(pServer),
+    m_dwFilterFlags(dw),
+    m_bIncludeChildren(b),
+    m_wstrDirectory(sz)
 {
-	m_pServer		= pServer;
-	m_dwFilterFlags		= dw;
-	m_bIncludeChildren	= b;
-	m_wstrDirectory	= sz;
-	m_hDirectory	= 0;
-
-	::ZeroMemory(&m_Overlapped, sizeof(OVERLAPPED));
-
 	// The hEvent member is not used when there is a completion
 	// function, so it's ok to use it to point to the object.
 	m_Overlapped.hEvent = this;
@@ -62,7 +58,7 @@ CReadChangesRequest::CReadChangesRequest(CReadChangesServer* pServer, LPCTSTR sz
 CReadChangesRequest::~CReadChangesRequest()
 {
 	// RequestTermination() must have been called successfully.
-	_ASSERTE(m_hDirectory == NULL);
+	_ASSERTE(m_hDirectory == nullptr);
 }
 
 
@@ -73,16 +69,16 @@ bool CReadChangesRequest::OpenDirectory()
 		return true;
 
 	m_hDirectory = ::CreateFileW(
-		m_wstrDirectory,					// pointer to the file name
+		m_wstrDirectory.c_str(),			// pointer to the file name
 		FILE_LIST_DIRECTORY,                // access (read/write) mode
 		FILE_SHARE_READ						// share mode
 		 | FILE_SHARE_WRITE
 		 | FILE_SHARE_DELETE,
-		NULL,                               // security descriptor
+		nullptr,                               // security descriptor
 		OPEN_EXISTING,                      // how to create
 		FILE_FLAG_BACKUP_SEMANTICS			// file attributes
 		 | FILE_FLAG_OVERLAPPED,
-		NULL);                              // file with attributes to copy
+		nullptr);                              // file with attributes to copy
 
 	if (m_hDirectory == INVALID_HANDLE_VALUE)
 	{
@@ -97,7 +93,7 @@ void CReadChangesRequest::BeginRead()
 	DWORD dwBytes=0;
 
 	// This call needs to be reissued after every APC.
-	BOOL success = ::ReadDirectoryChangesW(
+	bool success = ::ReadDirectoryChangesW(
 		m_hDirectory,						// handle to directory
 		&m_Buffer[0],                       // read results buffer
 		m_Buffer.size(),                    // length of buffer
@@ -149,23 +145,23 @@ void CReadChangesRequest::ProcessNotification()
 	{
 		FILE_NOTIFY_INFORMATION& fni = (FILE_NOTIFY_INFORMATION&)*pBase;
 
-		CStringW wstrFilename(fni.FileName, fni.FileNameLength/sizeof(wchar_t));
+		std::wstring wstrFilename(fni.FileName, fni.FileNameLength/sizeof(wchar_t));
 		// Handle a trailing backslash, such as for a root directory.
-		if (m_wstrDirectory.Right(1) != L"\\")
+		if (!m_wstrDirectory.empty() && m_wstrDirectory.back() != L'\\')
 			wstrFilename = m_wstrDirectory + L"\\" + wstrFilename;
 		else
 			wstrFilename = m_wstrDirectory + wstrFilename;
 
 		// If it could be a short filename, expand it.
-		LPCWSTR wszFilename = PathFindFileNameW(wstrFilename);
-		int len = lstrlenW(wszFilename);
+		LPCWSTR wszFilename = PathFindFileNameW(wstrFilename.c_str());
+		const int len = lstrlenW(wszFilename);
 		// The maximum length of an 8.3 filename is twelve, including the dot.
 		if (len <= 12 && wcschr(wszFilename, L'~'))
 		{
 			// Convert to the long filename form. Unfortunately, this
 			// does not work for deletions, so it's an imperfect fix.
 			wchar_t wbuf[MAX_PATH];
-			if (::GetLongPathNameW(wstrFilename, wbuf, _countof(wbuf)) > 0)
+			if (::GetLongPathNameW(wstrFilename.c_str(), wbuf, _countof(wbuf)) > 0)
 				wstrFilename = wbuf;
 		}
 

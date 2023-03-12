@@ -32,7 +32,7 @@
 
 
 LPCWSTR ExplainAction( DWORD dwAction );
-bool TryGetKeyboardInput( HANDLE hStdIn, bool &bTerminate, char* buf );
+bool TryGetKeyboardInput( HANDLE hStdIn, bool &bTerminate, std::wstring& buf);
 
 
 //
@@ -45,7 +45,7 @@ bool TryGetKeyboardInput( HANDLE hStdIn, bool &bTerminate, char* buf );
 
 int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 {
-	const DWORD dwNotificationFlags =
+	constexpr DWORD dwNotificationFlags =
 		FILE_NOTIFY_CHANGE_LAST_WRITE
 		| FILE_NOTIFY_CHANGE_CREATION
 		| FILE_NOTIFY_CHANGE_FILE_NAME;
@@ -58,7 +58,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 	HANDLE hStdIn =  ::GetStdHandle(STD_INPUT_HANDLE);
 	const HANDLE handles[] = { hStdIn, changes.GetWaitHandle() };
 
-	char buf[MAX_PATH];
+	std::wstring buf;
 	bool bTerminate = false;
 
 	while (!bTerminate)
@@ -71,19 +71,19 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 			// Shift keys, and more.  Delegate to TryGetKeyboardInput().
 			// TryGetKeyboardInput sets bTerminate to true if the user hits Esc.
 			if (TryGetKeyboardInput(hStdIn, bTerminate, buf))
-				changes.AddDirectory(CStringW(buf), false, dwNotificationFlags);
+				changes.AddDirectory(buf.c_str(), false, dwNotificationFlags);
 			break;
 		case WAIT_OBJECT_0 + 1:
 			// We've received a notification in the queue.
 			{
 				DWORD dwAction;
-				CStringW wstrFilename;
+				std::wstring wstrFilename;
 				if (changes.CheckOverflow())
 					wprintf(L"Queue overflowed.\n");
 				else
 				{
 					changes.Pop(dwAction, wstrFilename);
-					wprintf(L"%s %s\n", ExplainAction(dwAction), wstrFilename);
+					wprintf(L"%s %s\n", ExplainAction(dwAction), wstrFilename.c_str());
 				}
 			}
 			break;
@@ -119,10 +119,10 @@ LPCWSTR ExplainAction( DWORD dwAction )
 	}
 }
 
-bool TryGetKeyboardInput( HANDLE hStdIn, bool &bTerminate, char* buf )
+bool TryGetKeyboardInput( HANDLE hStdIn, bool &bTerminate, std::wstring& buf )
 {
 	DWORD dwNumberOfEventsRead=0;
-	INPUT_RECORD rec = {0};
+	INPUT_RECORD rec{};
 
 	if (!::PeekConsoleInput(hStdIn, &rec, 1, &dwNumberOfEventsRead))
 		return false;
@@ -133,7 +133,8 @@ bool TryGetKeyboardInput( HANDLE hStdIn, bool &bTerminate, char* buf )
 			bTerminate = true;
 		else if (rec.Event.KeyEvent.wVirtualKeyCode > VK_HELP)
 		{
-			if (!gets_s(buf, MAX_PATH))	// End of file, usually Ctrl-Z
+			WCHAR buf[MAX_PATH];
+			if (!_getws_s(buf, _countof(buf)))	// End of file, usually Ctrl-Z
 				bTerminate = true;
 			else
 				return true;

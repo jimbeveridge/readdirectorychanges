@@ -40,7 +40,7 @@ class CReadChangesServer;
 class CReadChangesRequest
 {
 public:
-	CReadChangesRequest(CReadChangesServer* pServer, LPCTSTR sz, BOOL b, DWORD dw, DWORD size);
+	CReadChangesRequest(CReadChangesServer* pServer, LPCTSTR sz, bool b, DWORD dw, DWORD size);
 
 	~CReadChangesRequest();
 
@@ -65,7 +65,7 @@ public:
 		m_hDirectory = nullptr;
 	}
 
-	CReadChangesServer* m_pServer;
+	CReadChangesServer* const m_pServer;
 
 protected:
 
@@ -75,24 +75,25 @@ protected:
 			LPOVERLAPPED lpOverlapped);					// I/O information buffer
 
 	// Parameters from the caller for ReadDirectoryChangesW().
-	DWORD		m_dwFilterFlags;
-	BOOL		m_bIncludeChildren;
-	CStringW	m_wstrDirectory;
+	const DWORD		m_dwFilterFlags;
+	const bool		m_bIncludeChildren;
+
+	std::wstring	m_wstrDirectory;
 
 	// Result of calling CreateFile().
-	HANDLE		m_hDirectory;
+	HANDLE		m_hDirectory{};
 
 	// Required parameter for ReadDirectoryChangesW().
-	OVERLAPPED	m_Overlapped;
+	OVERLAPPED	m_Overlapped{};
 
 	// Data buffer for the request.
 	// Since the memory is allocated by malloc, it will always
 	// be aligned as required by ReadDirectoryChangesW().
-	vector<BYTE> m_Buffer;
+	std::vector<BYTE> m_Buffer;
 
 	// Double buffer strategy so that we can issue a new read
 	// request before we process the current buffer.
-	vector<BYTE> m_BackupBuffer;
+	std::vector<BYTE> m_BackupBuffer;
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -169,7 +170,7 @@ protected:
 		m_pBlocks.clear();
 	}
 
-	vector<CReadChangesRequest*> m_pBlocks;
+	std::vector<CReadChangesRequest*> m_pBlocks;
 
 	bool m_bTerminate;
 };

@@ -37,16 +37,16 @@ public:
 		m_bOverflow = false;
 
 		m_hSemaphore = ::CreateSemaphore(
-			NULL,		// no security attributes
+			nullptr,		// no security attributes
 			0,			// initial count
 			nMaxCount,	// max count
-			NULL);		// anonymous
+			nullptr);		// anonymous
 	}
 
 	~CThreadSafeQueue()
 	{
 		::CloseHandle(m_hSemaphore);
-		m_hSemaphore = NULL;
+		m_hSemaphore = nullptr;
 	}
 
 	void push(C& c)
@@ -55,7 +55,7 @@ public:
 		push_back( c );
 		lock.Unlock();
 
-		if (!::ReleaseSemaphore(m_hSemaphore, 1, NULL))
+		if (!::ReleaseSemaphore(m_hSemaphore, 1, nullptr))
 		{
 			// If the semaphore is full, then take back the entry.
 			lock.Lock();
