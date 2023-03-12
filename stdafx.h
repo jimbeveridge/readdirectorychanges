@@ -5,8 +5,6 @@
 
 #pragma once
 
-#define _CRT_SECURE_NO_DEPRECATE
-
 #include "targetver.h"
 
 #include <stdio.h>
@@ -17,9 +15,7 @@
 
 #include <windows.h>
 
-#include <atlbase.h>
+#define _ATL_NO_AUTOMATIC_NAMESPACE
 
-#include <vector>
-#include <list>
-#include <stdio.h>
-#include <stdlib.h>
+// Needed by ThreadSafeQueue.h
+#include <atlbase.h>

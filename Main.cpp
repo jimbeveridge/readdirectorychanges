@@ -33,6 +33,7 @@
 
 LPCWSTR ExplainAction(DWORD dwAction);
 bool TryGetKeyboardInput(HANDLE hStdIn, bool& bTerminate, std::wstring& buf);
+std::wstring GetEnv(wchar_t* var);
 
 
 //
@@ -52,7 +53,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 
     // Create the monitor and add two directories.
     CReadDirectoryChanges changes;
-    changes.AddDirectory(_tgetenv(_T("USERPROFILE")), true, dwNotificationFlags);
+    changes.AddDirectory(GetEnv(_T("USERPROFILE")).c_str(), true, dwNotificationFlags);
     changes.AddDirectory(_T("C:\\"), false, dwNotificationFlags);
 
     const HANDLE hStdIn = ::GetStdHandle(STD_INPUT_HANDLE);
@@ -144,4 +145,14 @@ bool TryGetKeyboardInput(HANDLE hStdIn, bool& bTerminate, std::wstring& buf)
     ::FlushConsoleInputBuffer(hStdIn);
 
     return false;
+}
+
+std::wstring GetEnv(wchar_t* var)
+{
+    wchar_t* buffer{};
+    size_t bufferSize{};
+    errno_t ec = _wdupenv_s(&buffer, &bufferSize, var);
+    std::wstring result(buffer, bufferSize);
+    free(buffer);
+    return result;
 }

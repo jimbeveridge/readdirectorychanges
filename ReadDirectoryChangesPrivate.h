@@ -26,6 +26,8 @@
 //	http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html
 //	See ReadMe.txt for overview information.
 
+#include <vector>
+
 class CReadDirectoryChanges;
 
 namespace ReadDirectoryChangesPrivate
@@ -105,11 +107,12 @@ namespace ReadDirectoryChangesPrivate
     class CReadChangesServer
     {
     public:
-        CReadChangesServer(CReadDirectoryChanges* pParent)
-        {
-            m_bTerminate = false; m_nOutstandingRequests = 0; m_pBase = pParent;
-        }
+        CReadChangesServer(CReadDirectoryChanges* pParent) : m_pBase(pParent)
+        {}
 
+        // This helper function is not needed if you are using std::thread.
+        // For example:
+        // std::thread thread = std::thread([pServer]() {pServer->Run();});
         static unsigned int WINAPI ThreadStartProc(LPVOID arg)
         {
             CReadChangesServer* pServer = (CReadChangesServer*)arg;
@@ -131,12 +134,6 @@ namespace ReadDirectoryChangesPrivate
             pRequest->m_pServer->AddDirectory(pRequest);
         }
 
-        CReadDirectoryChanges* m_pBase;
-
-        volatile DWORD m_nOutstandingRequests;
-
-    protected:
-
         void Run()
         {
             while (m_nOutstandingRequests || !m_bTerminate)
@@ -144,6 +141,12 @@ namespace ReadDirectoryChangesPrivate
                 DWORD rc = ::SleepEx(INFINITE, true);
             }
         }
+
+        CReadDirectoryChanges* const m_pBase;
+
+        volatile DWORD m_nOutstandingRequests{};
+
+    protected:
 
         void AddDirectory(CReadChangesRequest* pBlock)
         {
@@ -172,7 +175,7 @@ namespace ReadDirectoryChangesPrivate
 
         std::vector<CReadChangesRequest*> m_pBlocks;
 
-        bool m_bTerminate;
+        bool m_bTerminate{};
     };
 
 }
