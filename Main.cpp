@@ -55,7 +55,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
     changes.AddDirectory(_tgetenv(_T("USERPROFILE")), true, dwNotificationFlags);
     changes.AddDirectory(_T("C:\\"), false, dwNotificationFlags);
 
-    HANDLE hStdIn = ::GetStdHandle(STD_INPUT_HANDLE);
+    const HANDLE hStdIn = ::GetStdHandle(STD_INPUT_HANDLE);
     const HANDLE handles[] = { hStdIn, changes.GetWaitHandle() };
 
     std::wstring buf;
@@ -76,12 +76,14 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
         case WAIT_OBJECT_0 + 1:
             // We've received a notification in the queue.
         {
-            DWORD dwAction;
             std::wstring wstrFilename;
             if (changes.CheckOverflow())
+            {
                 wprintf(L"Queue overflowed.\n");
+            }
             else
             {
+                DWORD dwAction;
                 changes.Pop(dwAction, wstrFilename);
                 wprintf(L"%s %s\n", ExplainAction(dwAction), wstrFilename.c_str());
             }
@@ -93,9 +95,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
         }
     }
 
-    // Just for sample purposes. The destructor will
-    // call Terminate() automatically.
-    changes.Terminate();
+    // The destructor for `changes` will call Terminate() automatically.
 
     return EXIT_SUCCESS;
 }
